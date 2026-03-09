@@ -1195,7 +1195,7 @@ document.addEventListener('keydown', async function(e){
 })
 //#endregion
 
-
+let mainD = document.getElementById('main');
 
 //#region start
 function start(){
