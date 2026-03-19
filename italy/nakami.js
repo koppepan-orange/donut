@@ -1021,6 +1021,10 @@ function fontsLoad(){
 fontsLoad();
 //#endregion
 //#region images & sounds
+let Pathes = [
+    "../",
+    "https://koppepan-orange.github.io/test-site/"
+]
 let images = {};
 let sounds = {};
 let loaC = {
@@ -1030,15 +1034,15 @@ let loaC = {
 }
 let loaF = {};
 loaC.imgL = {
-    systems:['error'],
+    // systems:['error'],
 }
-loaC.imgT = Object.values(loaC.imgL).reduce((a,b) => a + b.length, 0);
+loaC.imgT = Object.values(loaC.imgL).length;
 
 loaC.souL = {
-    // se:['error'],
+    se:['error'],
     // bgm:[],
 }
-loaC.souT = Object.values(loaC.souL).reduce((a,b) => a + b.length, 0);
+loaC.souT = Object.values(loaC.souL).length;
 
 loaF.load = async() => {
     if(await loaF.loadI()) return 1;
@@ -1056,16 +1060,24 @@ loaF.loadI = async() => {
 
         for(let name of loaC.imgL[belong]){
             let img = new Image();
-            img.src = `assets/images/${belong}/${name}.png`;
-            img.onload = kasan();
-            img.onerror = () => {
-                console.error(`Image assets/images/${belong}/${name}.png failed to load.`);
-                loaC.erd += 1;
-                 if(loaC.erd > 20) return console.error('さすがにやりすぎbonus'), 1;
-                img.src = `assets/images/systems/error.png`;
-                kasan();
-            };
-            
+            let letsLoad = (i) => {
+                let ph = Pathes[i];
+                img.src = `${ph}assets/images/${belong}/${name}.png`;
+                img.onload = () => {return kasan()};
+                img.onerror = () => {
+                    if(i < Pathes.length-1) return letsLoad(i+1);
+
+                    console.error(`Image assets/images/${belong}/${name}.png failed to load.`);
+                    loaC.erd += 1;
+                     if(loaC.erd > 20) return console.error('さすがにやりすぎbonus'), 1;
+                    
+                    img.onerror = null;
+                    img.src = `${Pathes[1]}assets/images/systems/error.png`;
+                    kasan();
+                };
+            }
+            letsLoad(0);
+
             images[belong][name] = img;
         }   
     }
@@ -1084,7 +1096,6 @@ loaF.loadS = async() => {
         for(let name of loaC.souL[belong]){
             let sound = new Audio();
             sound.preload = 'auto';
-            sound.src = `assets/sounds/${belong}/${name}.mp3`;
             if(belong == 'bgm'){
                 sound.loop = 1;
                 sound.dataset.type = 'bgm';
@@ -1094,16 +1105,26 @@ loaF.loadS = async() => {
                 sound.dataset.type = 'se';
                 sound.volume = souC.se;
             }
-            sound.addEventListener('canplaythrough', () => {
-                kasan();
-            }, {once: 1});
-            sound.onerror = () => {
-                console.error(`Sound assets/sounds/${belong}/${name} failed to load.`);
-                loaC.erd += 1;
-                 if(loaC.erd > 20) return console.error('さすがにやりすぎbonus'), 1;
-                sound.src = `assets/sounds/se/error.mp3`;
-                kasan();
-            };
+
+            let letsLoad = (i) => {
+                let ph = Pathes[i];
+                sound.src = `${ph}assets/sounds/${belong}/${name}.mp3`;
+                sound.addEventListener('canplaythrough', () => {
+                    kasan();
+                }, {once: 1});
+                sound.onerror = () => {
+                    if(i < Pathes.length-1) return letsLoad(i+1);
+
+                    console.error(`Sound assets/sounds/${belong}/${name} failed to load.`);
+                    loaC.erd += 1;
+                    if(loaC.erd > 20) return console.error('さすがにやりすぎbonus'), 1;
+
+                    sound.onerror = null;
+                    sound.src = `${Pathes[1]}assets/sounds/se/error.mp3`;
+                    kasan();
+                }
+            }
+            letsLoad(0);
 
             sounds[belong][name] = sound;
         }
@@ -1267,10 +1288,52 @@ document.addEventListener('keydown', async function(e){
 //#endregion
 
 
+let mainD = document.getElementById('main');
+let mainC = {
+    ares: ['napoli']
+}
+let mainF = {};
+mainF.move = (code) => {
+	if(!code) return console.error(`せんぱ〜い？${code}ってどこですか〜？笑`);
+	
+	for(let a of mainC.ares) document.getElementById(a).classList.remove('show');
+    document.getElementById(code).classList.add('show');
+}
+
+// #region Napoli
+let napD = document.getElementById('napoli');
+let napC = {
+    linkD: napD.querySelector('.links'),
+}
+let napF = {};
+
+napF.load = () => {
+    for(let li of Links){
+        let div = El('div', 'item');
+        
+        let name = El('div', 'name');
+        name.innerText = li.name;
+        if(li.desc) name.dataset.description = li.desc;
+        div.appendChild(name);
+
+        div.addEventListener('click', () => {
+            // li.hrefを_blankで開く
+            window.open(li.href, '_blank');
+        });
+        
+        napC.linkD.appendChild(div);
+    }
+}
+// #endregion
+
 
 //#region start
 function start(){
     Style.tekiou();
     OBS.load();
+
+    napF.load();
+
+    mainF.move('napoli');
 }
 //#endregion
