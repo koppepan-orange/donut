@@ -24,8 +24,8 @@ let Links = [
         href:'https://koppepan-orange.github.io/game-site/'
     },
     {
-        name:'france-bread',
-        href:'https://koppepan-orange.github.io/france-bread/'
+        name:'france_bread',
+        href:'https://koppepan-orange.github.io/france_bread/'
     },
     {
         name:'forSchool',

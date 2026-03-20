@@ -1045,6 +1045,7 @@ loaC.souL = {
 loaC.souT = Object.values(loaC.souL).length;
 
 loaF.load = async() => {
+    console.log('lets code')
     if(await loaF.loadI()) return 1;
     return 0;
 }
@@ -1194,7 +1195,11 @@ function soundVolume(code, val){
 }
 soundVolume(50);
 
-document.addEventListener('DOMContentLoaded', async() => await loaF.load());
+let LoadOfWait = async() => await loaF.load();
+if(document.readyState == "loading"){
+    document.addEventListener("DOMContentLoaded", init);
+}
+else LoadOfWait();
 //#endregion
 //#region 幸せになれる隠しコマンドがあるらしい
 let secrates = [
