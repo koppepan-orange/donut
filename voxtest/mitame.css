@@ -389,6 +389,50 @@ img{
     display: flex;
 }
 
+#timer{
+    display: block;
+    width: 100px;
+    aspect-ratio: 1/1;
+    position: absolute;
+    left: 0px;
+    bottom: 0px;
+    transition: opacity 0.5s ease-in-out;
+    opacity: 0.9;
+    z-index: 2;
+}
+#timer.tog{
+    /* opacity: 0.1; */
+    background: "#f0f8ff";
+}
+#timer .zyou{
+    width: 100%;
+    aspect-ratio: 1/1;
+    clip-path: polygon(45% 0, 55% 0, 60% 20%, 40% 20%);
+    background: #464646;
+    position: absolute;
+    top: -10%;
+    left: 0;
+}
+#timer .naka{
+    width: 100%;
+    aspect-ratio: 1/1;
+    border-radius: 50%; /*丸*/
+    background: #464646;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+#timer .time{
+    display: block;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 35px;
+    font-family: misaki;
+    color: #ffffff;
+}
+
 
 #canvas {
     display: block;

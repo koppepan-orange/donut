@@ -13,6 +13,22 @@ let Style = {
     }
 }
 
+let Blocks = [
+    {
+        i:0,
+        pos:"0 5 0",
+        siz:"10 5 10",
+        col:0xff8080,
+        accel:1
+    },
+    {
+        i:1,
+        pos:"20 5 -5",
+        siz:"10 5 10",
+        col:0x8080ff,
+        jump:1,
+    }
+]
 
 let Objects = [
     {
@@ -20,11 +36,21 @@ let Objects = [
         scale: 100,
         touchable: 1,
         start:1,
-        startF: {
-            x: 0,
-            y: 20,
-            z: 0,
-        }
+        startP: "0 30 0"
+    },
+    {
+        name:"accelpad",
+        scale: 100,
+        touchable: 1,
+        touchKind: "on",
+        accelRate: 300
+    },
+    {
+        name:"jumppad",
+        scale: 100,
+        touchable: 1,
+        touchKind: "on",
+        jumpRate: 60
     }
 ]
 
