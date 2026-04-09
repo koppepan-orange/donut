@@ -1194,12 +1194,6 @@ function soundVolume(code, val){
     console.log(`[soundVolume] se:${souC.se} bgm:${souC.bgm}`);
 }
 soundVolume(50);
-
-let LoadOfWait = async() => await loaF.load();
-if(document.readyState == "loading"){
-    document.addEventListener("DOMContentLoaded", init);
-}
-else LoadOfWait();
 //#endregion
 //#region 幸せになれる隠しコマンドがあるらしい
 let secrates = [
@@ -1340,5 +1334,18 @@ function start(){
     napF.load();
 
     mainF.move('napoli');
+}
+//#endregion
+
+//#region DOM
+let LoadOfWait = async() => await loaF.load();
+if(document.readyState == "loading"){
+    document.addEventListener("DOMContentLoaded", init);
+}
+else LoadOfWait();
+
+async function init() {
+    await LoadOfWait();
+    start();
 }
 //#endregion

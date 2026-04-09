@@ -14,8 +14,40 @@
         <div class="main"></div>
         <div class="text"></div>
     </div>
+    <div id="movlis">
+        <div class="title">Move List</div>
+        <div class="list"></div>
+    </div>
 
-    <script src="data.js" defer></script>
-    <script src="nakami.js" defer></script>
+    <div id="main">
+
+
+
+    </div>
+    
+    <!-- <script src="data.js" defer></script> -->
+    <!-- <script src="nakami.js" defer></script> -->
+
+    <script>
+        (function() {
+            let ts = new Date().getTime(); 
+
+            let fs = ['data', 'nakami'];
+            for(let f of fs){
+                let script = document.createElement('script');
+                script.src = `${f}.js?v=${ts}`;
+                script.defer = true;
+                document.head.appendChild(script);
+            }
+
+            let link = document.createElement('link');
+            link.rel = "stylesheet";
+            link.href = `mitame.css?v=${ts}`;
+            link.onload = () => {
+                document.body.style.visibility = "visible";
+            };
+            document.head.appendChild(link);
+        })();
+    </script>
 </body>
 </html>
