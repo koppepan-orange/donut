@@ -366,8 +366,8 @@ function irohaDark(color) {
     // 0.2126 * R + 0.7152 * G + 0.0722 * B
     let luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
     
-    return luma < 128; // 暗い色ならtrue
-}
+    return luma < 128; // 暗い色なら1
+};
 
 function timeDiff(kako){
     if(typeof kako == 'number') kako = kako.toString();
@@ -913,7 +913,7 @@ let OBS = {
     cling: 0,
     cring: 0,
     mx: 0,
-    my: 0
+    my: 0,
 }
 
 OBS.KeysA = (e) => {
@@ -1383,19 +1383,21 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 HomD.appendChild(renderer.domElement);
 
 let zentaiLight = new THREE.AmbientLight(0xffffff, 0.25);
+zentaiLight.name = 'zentaiLight';
 scene.add(zentaiLight);
 
 let sunLight = new THREE.DirectionalLight(0xffff80, 1);
+sunLight.name = 'sunLight';
 sunLight.position.set(5, 5, 5);
 scene.add(sunLight);
 
 let pointLight = new THREE.PointLight(0x0000ff, 2, 50, 1.0);
+pointLight.name = 'pointLight';
 scene.add(pointLight);
 
 let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.name = 'cinema';
 camera.position.set(0, 100, 0);
-camera.fov = 60;
-camera.updateProjectionMatrix();
 
 let direction = new THREE.Vector3();
 
@@ -1448,29 +1450,52 @@ let velocity = new THREE.Vector3();
 let acceleration = new THREE.Vector3();
 
 
-let info = document.querySelector('#debug-info');
+let debugD = document.getElementById('debug');
 let fov = 60;
-let isCreative = false;
+changeFov(60);
+let isCreative = 0;
 
 let tpSelect = document.querySelector('#tpSelect');
 let tpSelectXD = 1;
 let tpSelectable = 0;
 
-document.addEventListener('keydown', function(event){
-    if(event.key == "r" && !tpSelectable){
+dash = {
+    lastW: 0,
+    span: 250
+}
+
+document.addEventListener('keydown', function(e){
+    let key = e.key.toLowerCase();
+    // if(key == ' ') key = 'space';
+
+    if(key == "r" && !tpSelectable){
         tpSelect.style.display = "flex";
         tpSelectable = 1;
         tpSeltekiou();
+    }
+
+    if(key == "w" && !e.repeat){
+        let now = Date.now();
+        if(now - dash.lastW < dash.span){
+            Player.dashing = 1;
+            changeFov(120);
+        }
+        dash.lastW = now;
     }
 });
 
 document.addEventListener('keyup', function(event){
     switch(event.key){
+        case 'w':
+            Player.dashing = 0;
+            changeFov(60);
+            break;
+
         case 'g':
-            if(info.style.display == 'none'){
-                info.style.display = 'block';
+            if(debugD.style.display == 'none'){
+                debugD.style.display = 'block';
             }else{
-                info.style.display = 'none';
+                debugD.style.display = 'none';
             }
             break;
 
@@ -1488,12 +1513,12 @@ document.addEventListener('keyup', function(event){
 
         case 'k':
             if(World.gravity == -0.1){
-                isCreative = true;
+                isCreative = 1;
                 World.gravity = 0;
                 velocity.set(0, 0, 0);
                 acceleration.set(0, 0, 0);
             }else{
-                isCreative = false;
+                isCreative = 0;
                 World.gravity = -0.1;
             }
             break;
@@ -1503,13 +1528,8 @@ document.addEventListener('keyup', function(event){
             break;
 
         case 'f':
-            if(fov < 170){
-                fov += 10;
-            }else{
-                fov = 10;
-            }
-            camera.fov = fov;
-            camera.updateProjectionMatrix();
+            if(fov < 170) changeFov(10, 'add');
+            else changeFov(0, 'set');
             break;
     }
 
@@ -1539,6 +1559,20 @@ document.addEventListener('keyup', function(event){
     }
 });
 
+function changeFov(num = NaN, code){
+    jump:{
+        if(isNaN(num)) break jump;
+
+        switch(code){
+            case 'add': fov += num; break;
+            default: fov = num; break;
+        }
+    }
+    
+    camera.fov = fov;
+    camera.updateProjectionMatrix();
+}
+
 function tpSeltekiou(){
     let items = document.querySelectorAll('#tpSelect .item');
     items.forEach(function(a){
@@ -1550,103 +1584,151 @@ function tpSeltekiou(){
 let raycaster = new THREE.Raycaster();
 
 let objects = [];
-let touchableObjects = [];
 
 let loader = new THREE.OBJLoader();
 let mtlLoader = new THREE.MTLLoader();
-
-let backGrounds = [];
-
-for(let ob of Objects.filter(function(ob){ return ob.start; })){
-    placeObject(ob);
-}
-
-let existOb = 0;
 
 function objFind(name){
     let ob = Objects.find(a => a.name == name);
     if(!ob) return console.error("無いっす！");
     return ob;
 }
-function placeObject(object){
-    console.log(object.name);
-    mtlLoader.load(`assets/objects/${object.name}.mtl`, function(materials){
-        materials.preload();
-        loader.setMaterials(materials);
 
-        loader.load(`assets/objects/${object.name}.obj`, function(obj){
-            obj.traverse(function(child){
-                if(child.isMesh){
-                    child.name = object.name,
-                    child.userData = {
-                        id: existOb,
-                        touchable: object.touchable ? 1 : 0,
-                        dethable: object.dethable ? 1 : 0,
-                        accelable: object.accelable ? 1 : 0
-                    };
-
-                    child.geometry.computeBoundingBox();
-                    objects.push(child);
-                    existOb += 1;
-                }
-            });
-
-            let [obx, oby, obz] = object.pos.split(' ').map(Number);
-            obj.position.set(obx, oby, obz);
-            obj.scale.set(object.scale, object.scale, object.scale);
-            scene.add(obj);
-            return obj;
-        });
-    });
-}
 
 let floorAtumii = 3;
-let floorWandH = 1000;
-
+let floorWandH = 500;
 let floorGeometry = new THREE.BoxGeometry(floorWandH, floorAtumii, floorWandH);
 let floorMaterial = new THREE.MeshBasicMaterial({ color: 0xb2b2b2 });
 let floor = new THREE.Mesh(floorGeometry, floorMaterial);
+floor.name = 'floor';
 
 let gridStep = 5; //5ずつ引く
 let grid = new THREE.GridHelper(floorWandH, floorWandH / gridStep, 0x2b2b2b, 0x2b2b2b);
+grid.name = 'grid';
 grid.material.opacity = 0.5;
-grid.material.transparent = true;
+grid.material.transparent = 1;
 grid.position.y = -floorAtumii / 2;
 scene.add(grid);
 
 floor.position.y = -floorAtumii;
-floor.userData.touchable = true;
+floor.userData.touchable = 1;
 objects.push(floor);
 scene.add(floor);
 
-for(let bl of Blocks){
-    let geometry = new THREE.BoxGeometry(...bl.siz.split(' ').map(Number));
-    let material = new THREE.MeshStandardMaterial({color: bl.col});
+
+for(let ob of Objects){
+}
+
+
+function placeObject(name, x, y, z, sx, sy, sz){
+    //名前, 座標xyz, 大きさxyz
+    // ...ob.siz.split(' ').map(Number)
+
+
+    let geometry = new THREE.BoxGeometry(sx, sy, sz);
+    let material = new THREE.MeshStandardMaterial({color: ob.col});
 
     let block = new THREE.Mesh(geometry, material);
-    block.name = bl.i;
-    block.position.set(...bl.pos.split(' ').map(Number));
-    block.userData.touchable = true;
-    if(bl.accel) block.userData.accelPad = true;
-    if(bl.jump) block.userData.jumpPad = true;
+    block.name = ob.i;
+    block.position.set(x, y, z);
+    block.userData.touchable = 1;
+    if(ob.accel) block.userData.accelPad = 1;
+    if(ob.jump) block.userData.jumpPad = 1;
     objects.push(block);
     scene.add(block);
 }
 
+
+const B_SIZE = 5;
+const blockGroup = new THREE.Group();
+scene.add(blockGroup);
+objects.push(blockGroup);
+
+//ブロックを配置する
+function placeBlock(x, y, z, col = 0xffffff) {
+    let geometry = new THREE.BoxGeometry(B_SIZE, B_SIZE, B_SIZE);
+    let material = new THREE.MeshStandardMaterial({ color: col });
+    let block = new THREE.Mesh(geometry, material);
+    block.name = 'block';
+
+    // グリッドにスナップさせる
+    block.position.set(
+        Math.floor(x / B_SIZE) * B_SIZE + B_SIZE / 2,
+        Math.floor(y / B_SIZE) * B_SIZE + B_SIZE / 2,
+        Math.floor(z / B_SIZE) * B_SIZE + B_SIZE / 2
+    );
+
+    block.userData.touchable = 1;
+    objects.push(block);
+    blockGroup.add(block);
+}
+
+// 今見ている場所を検知して、配置用の座標を返す
+function getLookAtPosition(){
+    raycaster.setFromCamera({ x: 0, y: 0 }, camera);
+    
+    // 判定距離（15とか20くらいが妥当じゃん？）
+    let intersects = raycaster.intersectObjects(objects.concat(blockGroup.children), true);
+
+    if (intersects.length > 0) {
+        let hit = intersects[0];
+        // ぶつかった面の法線（向き）を使って、隣のブロックの座標を出す
+        let res = new THREE.Vector3().copy(hit.point).add(hit.face.normal.clone().multiplyScalar(B_SIZE / 2));
+        return {
+            pos: res,
+            target: hit.object // 壊す時用に、当たったオブジェクトも一応返す
+        };
+    }
+    return null;
+}
+
+// クリックで配置（とりあえず右クリックで置く感じにしてる）
+document.addEventListener('mousedown', function(e) {
+    if (document.pointerLockElement !== document.body) return;
+
+    let look = getLookAtPosition();
+    if (!look) return;
+
+    if(e.button === 2){ // 右クリック
+        let color = irohaRan().toString(16);
+        // ここで選んでる色を渡してね♡ 
+        placeBlock(look.pos.x, look.pos.y, look.pos.z, color);
+    } 
+    else if (e.button === 0) { // 左クリックで削除
+        if (look.target !== floor && look.target.parent === blockGroup) {
+            blockGroup.remove(look.target);
+            objects.splice(objects.indexOf(look.target), 1);
+        }
+    }
+});
+
+document.addEventListener('contextmenu', e => e.preventDefault());
+
+function preBlockLoad(){
+    let wid = floorWandH/2;
+    for(let i=-wid; i<=wid; i+=B_SIZE){
+        for(let j=-wid; j<=wid; j+=B_SIZE){
+            let color = irohaRan().toString(16);
+            placeBlock(i, 0, j, color);
+        }
+    }
+}
+
+
 let World = {
     gravity: -0.15,
-    distance: 2, //カメラとの距離?
+    distance: 4, //カメラとの距離?
     dragRate: 0.1, //摩擦
     maxSpeed: 10
 }
 let Player = {
     accelRate: 0.1, //加速度
-    jumpPower: 2
+    jumpPower: 2,
+    dashing: 0,
+    ground: 0,
+    onAccel: 0,
+    onJump: 0
 }
-let isGrounded = false;
-let isOnAccelPad = false;
-let isOnJumpPad = false;
-let distance = 2;
 let dragRate = 0.1;
 let accelRate = 0.05;
 let accelPadRate = 3;
@@ -1658,7 +1740,7 @@ function checkGround(){
     let rayLength = Math.abs(velocity.y) + 10;
     raycaster.set(camera.position, new THREE.Vector3(0, -1, 0));
 
-    let intersects = raycaster.intersectObjects(objects, false);
+    let intersects = raycaster.intersectObjects(objects, 0);
 
     let groundedHit = intersects.find(function(ob){
         return ob.object.userData.touchable && ob.distance <= rayLength;
@@ -1669,22 +1751,22 @@ function checkGround(){
     });
 
     if(accelPadHit){
-        isOnAccelPad = true;
-    }else isOnAccelPad = false;
+        Player.onAccel = 1;
+    }else Player.onAccel = 0;
 
     let jumpPadHit = intersects.find(function(ob){
         return ob.object.userData.touchable && ob.object.userData.jumpPad && ob.distance <= rayLength;
     });
 
     if(jumpPadHit){
-        isOnJumpPad = true;
-    }else isOnJumpPad = false;
+        Player.onJump = 1;
+    }else Player.onJump = 0;
 
     if(groundedHit && !isCreative){
-        isGrounded = true;
+        Player.ground = 1;
         velocity.y = -velocity.y * 0.6;
     }
-    else isGrounded = false;
+    else Player.ground = 0;
 }
 
 function checkWallCollision(){
@@ -1695,16 +1777,16 @@ function checkWallCollision(){
 
     raycaster.set(camera.position, lookDir);
 
-    let intersects = raycaster.intersectObjects(objects, false);
+    let intersects = raycaster.intersectObjects(objects, 0);
 
     for(let i = 0; i < intersects.length; i++){
         let hit = intersects[i];
         if(hit.object.userData.touchable && hit.distance < 0.5){
-            return true;
+            return 1;
         }
     }
 
-    return false;
+    return 0;
 }
 
 
@@ -1723,12 +1805,11 @@ function updateCameraMovement(){
         velocity.z = horizontal.z;
     }
 
-    if(OBS.keys.control){
-        acceleration.z = accelRate * 30;
-    }
+    if(Player.dashing) maxSpeed = 3;
+    else maxSpeed = 1;
     
     
-    else if(OBS.keys.q && OBS.keys.e){
+     if(OBS.keys.q && OBS.keys.e){
         acceleration.z = accelRate * 15;
     }
     
@@ -1739,6 +1820,7 @@ function updateCameraMovement(){
 
 
         let rate = accelRate;
+        if(Player.dashing) rate *= 2.5;
         if(1 < [OBS.keys.w, OBS.keys.s, OBS.keys.a, OBS.keys.d].filter(a => a).length) rate /= 2;
         
         if(OBS.keys.s && !checkWallCollision()){
@@ -1763,10 +1845,10 @@ function updateCameraMovement(){
         acceleration.z = -velocity.z * dragRate;
     }
 
-    if(isOnAccelPad){
+    if(Player.onAccel){
         acceleration.z = objFind("accelpad").accelRate;
     }
-    if(isOnJumpPad){
+    if(Player.onJump){
         velocity.y = objFind("jumppad").jumpRate;
     }
 
@@ -1775,15 +1857,15 @@ function updateCameraMovement(){
     camera.position.addScaledVector(forward, velocity.z);
     camera.position.addScaledVector(right, velocity.x);
 
-    if(OBS.keys.space && isGrounded){
+    if(OBS.keys.space && Player.ground){
         velocity.y = jumpPower;
-    }else if(OBS.keys.space && !isGrounded && isCreative){
+    }else if(OBS.keys.space && !Player.ground && isCreative){
         velocity.y = jumpPower;
-    }else if(!OBS.keys.space && !isGrounded && isCreative){
+    }else if(!OBS.keys.space && !Player.ground && isCreative){
         velocity.y = 0;
     }
 
-    if(!isGrounded){
+    if(!Player.ground){
         velocity.y += World.gravity;
         if(!timerC.timer) timerF('reset'), timerF('start')
     }
@@ -1793,15 +1875,15 @@ function updateCameraMovement(){
 
     checkGround('player');
 
-    if(info){
-        info.querySelector('.position').textContent = `position: x:${camera.position.x.toFixed(2)}, y:${camera.position.y.toFixed(2)}, z:${camera.position.z.toFixed(2)}`;
-        info.querySelector('.rotation').textContent = `rotation: x:${camera.rotation.x.toFixed(2)}, y:${camera.rotation.y.toFixed(2)}, z:${camera.rotation.z.toFixed(2)}`;
-        info.querySelector('.velocity').textContent = `velocity: x:${velocity.x.toFixed(2)}, y:${velocity.y.toFixed(2)}, z:${velocity.z.toFixed(2)}`;
-        info.querySelector('.acceleration').textContent = `acceleration: x:${acceleration.x.toFixed(2)}, y:${acceleration.y.toFixed(2)}, z:${acceleration.z.toFixed(2)}`;
-        info.querySelector('.jumpPower').textContent = `jumpPower:${jumpPower}`;
-        info.querySelector('.fov').textContent = `fov:${fov}`;
-        info.querySelector('.isGrounded').textContent = `isGrounded:${isGrounded}`;
-        info.querySelector('.isOnAccelPad').textContent = `isOnAccelPad:${isOnAccelPad}`;
+    if(debugD){
+        debugD.querySelector('.position').textContent = `position: x:${camera.position.x.toFixed(2)}, y:${camera.position.y.toFixed(2)}, z:${camera.position.z.toFixed(2)}`;
+        debugD.querySelector('.rotation').textContent = `rotation: x:${camera.rotation.x.toFixed(2)}, y:${camera.rotation.y.toFixed(2)}, z:${camera.rotation.z.toFixed(2)}`;
+        debugD.querySelector('.velocity').textContent = `velocity: x:${velocity.x.toFixed(2)}, y:${velocity.y.toFixed(2)}, z:${velocity.z.toFixed(2)}`;
+        debugD.querySelector('.acceleration').textContent = `acceleration: x:${acceleration.x.toFixed(2)}, y:${acceleration.y.toFixed(2)}, z:${acceleration.z.toFixed(2)}`;
+        debugD.querySelector('.jumpPower').textContent = `jumpPower:${jumpPower}`;
+        debugD.querySelector('.fov').textContent = `fov:${fov}`;
+        debugD.querySelector('.isGrounded').textContent = `Player.ground:${Player.ground}`;
+        debugD.querySelector('.isOnAccelPad').textContent = `Player.onAccel:${Player.onAccel}`;
     }
 }
 
@@ -1816,6 +1898,7 @@ function start(){
     OBS.load();
     mainF.load();
     mainF.move('home');
+    preBlockLoad()
     animate();
 }
 

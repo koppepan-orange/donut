@@ -13,31 +13,8 @@ let Style = {
     }
 }
 
-let Blocks = [
-    {
-        i:0,
-        pos:"0 5 0",
-        siz:"10 5 10",
-        col:0xff8080,
-        accel:1
-    },
-    {
-        i:1,
-        pos:"20 5 -5",
-        siz:"10 5 10",
-        col:0x8080ff,
-        jump:1,
-    }
-]
 
 let Objects = [
-    {
-        name: '二丁拳銃ってリロードどうすんだ？',
-        scale: 100,
-        touchable: 1,
-        start:1,
-        startP: "0 30 0"
-    },
     {
         name:"accelpad",
         scale: 100,

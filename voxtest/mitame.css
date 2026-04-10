@@ -438,7 +438,7 @@ img{
     display: block;
     z-index: 1;
 }
-#debug-info {
+#debug {
     position: fixed;
     top: 0;
     left: 0;
@@ -525,3 +525,41 @@ img{
     background: linear-gradient(to top, rgba(255, 40, 216, 0.75), rgba(255, 79, 223, 0.5));
     z-index: 255;
 }
+
+#crosshair {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    /* 真ん中に持ってくるための調整 */
+    transform: translate(-50%, -50%);
+    
+    /* 見た目（シンプルな十字） */
+    pointer-events: none; /* クリックを邪魔しない */
+}
+
+#crosshair::before,
+#crosshair::after {
+    content: '';
+    position: absolute;
+    background: #00ff00; /* 好きな色でいいじゃん */
+    box-shadow: 0 0 2px #000; /* 黒縁つけると見やすくなる */
+}
+
+/* 横棒 */
+#crosshair::before {
+    top: 9px;
+    left: 0;
+    width: 20px;
+    height: 2px;
+}
+
+/* 縦棒 */
+#crosshair::after {
+    top: 0;
+    left: 9px;
+    width: 2px;
+    height: 20px;
+}
+
