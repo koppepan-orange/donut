@@ -1704,6 +1704,7 @@ document.addEventListener('mousedown', function(e) {
 
 document.addEventListener('contextmenu', e => e.preventDefault());
 
+// やんのかおら
 function preBlockLoad(){
     let wid = floorWandH/2;
     for(let i=-wid; i<=wid; i+=B_SIZE){
